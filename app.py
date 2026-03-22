@@ -13,18 +13,39 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 
-st.set_page_config(page_title="Retail Sales Dashboard", layout="wide")
+st.set_page_config(
+    page_title="Retail Sales Dashboard",
+    page_icon="🛒",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-st.title("Retail Sales & Marketing Intelligence Dashboard")
-st.markdown("Interactive dashboard built from the Online Retail dataset")
+st.markdown("""
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.hero {
+    animation: fadeIn 0.7s ease-out;
+    padding: 1.2rem 0 0.4rem 0;
+}
+.hero h1 { font-size: 2.1rem; font-weight: 700; margin-bottom: 0.2rem; }
+.hero p  { color: #888; font-size: 1rem; margin-top: 0; }
+</style>
+<div class="hero">
+  <h1>🛒 Retail Sales & Marketing Intelligence</h1>
+  <p>Interactive dashboard · UCI Online Retail dataset · 541 000 transactions</p>
+</div>
+""", unsafe_allow_html=True)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "Online Retail.xlsx")
 PARQUET_PATH = os.path.join(BASE_DIR, "online_retail_cache.parquet")
 
 
-# Data loading (parquet cache = ~10x faster after first run)
-@st.cache_data(show_spinner="Loading data...")
+# Data loading — cache_resource keeps data in RAM across all sessions
+@st.cache_resource(show_spinner="Loading data…")
 def load_data():
     if os.path.exists(PARQUET_PATH):
         return pd.read_parquet(PARQUET_PATH)
@@ -145,10 +166,11 @@ def compute_clustering(countries, months, n_clusters):
 # Load data 
 data = load_data()
 
-# Sidebar filters 
+# Sidebar filters
 st.sidebar.header("Filter Options")
 country_options = sorted(data["Country"].unique())
-selected_countries = st.sidebar.multiselect("Select Country", country_options, default=country_options)
+default_countries = ["United Kingdom"] if "United Kingdom" in country_options else country_options[:1]
+selected_countries = st.sidebar.multiselect("Select Country", country_options, default=default_countries)
 
 month_options = sorted(data[data["Country"].isin(selected_countries)]["YearMonth"].unique())
 selected_months = st.sidebar.multiselect("Select Year-Month", month_options, default=month_options)
